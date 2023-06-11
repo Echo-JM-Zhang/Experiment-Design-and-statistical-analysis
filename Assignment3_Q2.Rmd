@@ -1,0 +1,55 @@
+---
+title: "Assignment3_Q2"
+author: "Echo"
+date: "25/02/2023"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+Crabs.dat <- read.table("http://www.stat.ufl.edu/~aa/cat/data/Crabs.dat", header = TRUE)
+attach(Crabs.dat)
+
+model1 <- glm(y~weight, family = binomial)
+```
+
+1)
+
+```{r}
+summary(model1)
+```
+The logistic regression model is $ln(\frac{\hat{\pi}}{1-\hat{\pi}})=-3.6947+1.8151X$, where $\pi=P(Y=1)$, $\hat{\pi}$ is the estimation of ${\pi}$, and $X$ is weight. It can also be written as $\hat{\pi}=\frac{e^{-3.6947+1.8151X}}{1+e^{-3.6947+1.8151X}}$.
+
+2)
+
+odds = $\frac{\pi}{1-\pi}=e^{-3.6947+1.8151X}$
+
+For 1kg increase in weight (X), the ln(odds) of Satellite (Y) is increased by 1.8151, and the odds of Satellite (Y) is multiplied by exp(1.8151)=6.14 (increased by $(6.14-1)\times100\% =514\%$).
+
+3)
+
+```{r}
+# Calculate the mean of weight
+xbar <- mean(weight)
+xbar
+```
+The mean of weight is 2.4372kg. The estimated probability of a Satellite at the mean of weight value of the crabs ($\bar{X}=2.4372$) is $$\hat{\pi}=\hat{P}(Y=1|X=2.4372)=\frac{e^{-3.6947+1.8151\times2.4372}}{1+e^{-3.6947+1.8151\times2.4372}}=0.6746$$.
+
+4)
+
+```{r}
+# calculate pi for each unit
+fit <- model1$fitted.values
+
+#calculate marginal effect for each unit
+cc <-model1$coefficients[2]*fit*(1-fit)
+#average marginal effect of weight per 1kg increase
+mean(cc)
+detach(Crabs.dat)
+```
+Average marginal effect is the average of marginal effect of all units. The formula of marginal effect in logistic regression is $\beta\times\hat\pi\times(1-\hat\pi)$. From the R code, the average marginal effect of weight per 1kg increase is 0.3495. Thus, the average marginal effect of weight per 0.2kg increase is 0.3495*0.2=0.0699. This can be interpreted that the average change in the probability of Satellite is 0.0699 as weight increases by 0.2kg.
+

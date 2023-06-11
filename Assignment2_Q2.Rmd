@@ -1,0 +1,134 @@
+---
+title: "Assignment2_Q2"
+author: "Echo"
+date: "08/02/2023"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+1.
+
+Experimental unit: each subject in this experiment (the plant).
+
+Response variable: growth
+
+Factor: photoperiod; level: very short, short, long, very long
+
+Treatment: Combination of all factor levels. Since there is only 1 factor in this experiment, treatment is very short, short, long, or very long
+
+2. 
+```{r}
+y1 <- c(1, 1, 2, 3, 1, 2, 2)
+y2 <- c(1, 1, 3, 4, 2, 2, 3)
+y3 <- c(2, 2, 3, 5, 1, 2, 4)
+y4 <- c(3, 2, 4, 6, 2, 2, 5)
+n <- 7
+N <- 4*7
+group <- c(rep("very short", n), rep("short", n), rep("long", n), rep("very long", n))
+mydata <- data.frame(y=c(y1, y2, y3, y4), photoperiod = group)
+attach(mydata)
+
+# Calculate total sum of squares
+ybar <- mean(y)
+sst <- sum((y-ybar)^2)
+
+# Calculate treatment sum of squares
+y_groupmean <- c(mean(y1), mean(y2), mean(y3), mean(y4))
+ss_trt <- n*sum((y_groupmean-ybar)^2)
+
+# Calculate residual sum of squares
+rss <- sum((y1-mean(y1))^2)+sum((y2-mean(y2))^2)+sum((y3-mean(y3))^2)+sum((y4-mean(y4))^2)
+teststat <- (ss_trt/3)/(rss/24)
+
+ybar
+sst
+ss_trt
+rss
+teststat
+pf(teststat, 3, 24, lower.tail = FALSE)
+```
+
+
+One-way Anova:
+
+$SST=SS_{trt}+RSS$, where $SST$ stands for total sum of squares, $SS_{trt}$ for sum of squares of treatment, and $RSS$ for residual sum of squares.
+$\bar{y}=2.5357$
+
+$$SST=\sum_{i=1}^{4}\sum_{j=1}^{7}(y_{ij}-\bar{y})^2=48.9643$$
+
+$$SS_{trt}=\sum_{i=1}^{4}(\bar{y_i}-\bar{y})^2=10.9643$$
+
+$$RSS=\sum_{i=1}^{4}\sum_{j=1}^{7}(y_{ij}-\bar{y_i})^2=38$$
+The one-way ANOVA table:
+
+|source|SS|df|MS|F-test|
+|:----:|:----:|:----:|:----:|:----:|
+|treatment|$SS_{trt}=10.9643$|3|3.6548|$F=\frac{MS_{trt}}{MSE}=2.3083$|
+|residual|$RSS=38$|24|1.5833||
+|total|$SST=48.9643$|27|||
+
+Thus, test statistics is 2.3083, the degree of freedom is (3, 24). Thus p value is 0.102, which is greater than significant level $\alpha=0.05$. We fail to reject the null hypothesis and there is no significant difference of mean growth between each photoperiod level.
+
+Now calculate with built-in R function:
+```{r}
+anova1 <- aov(y~photoperiod)
+summary(anova1)
+
+```
+
+The built-in R anova function got the same results as I calculated.
+
+3.
+
+```{r}
+y1_mean <- mean(y1)
+y2_mean <- mean(y2)
+y3_mean <- mean(y3)
+y4_mean <- mean(y4)
+mse <- rss/24
+q <- 3.90
+
+y2_mean-y1_mean
+y3_mean-y1_mean
+y4_mean-y1_mean
+y3_mean-y2_mean
+y4_mean-y2_mean
+y4_mean-y3_mean
+mse
+q
+```
+$\bar{y_2}-\bar{y_1}=0.5714$, $\bar{y_3}-\bar{y_1}=1$, $\bar{y_4}-\bar{y_1}=1.7143$, $\bar{y_3}-\bar{y_2}=0.4286$, $\bar{y_4}-\bar{y_2}=1.1429$, $\bar{y_4}-\bar{y_3}=0.7143$
+
+$q_{\alpha}=3.90$, MSE=1.5833, each group has the same sample size $n=7$
+
+The Tukey 95% simultaneous confidence intervals for short-very short $\mu_2-\mu_1=(\bar{y_2}-\bar{y_1})\pm q_{\alpha}\sqrt{\frac{MSE}{2}(\frac{1}{n}+\frac{1}{n})}=0.5714\pm 3.9\sqrt{\frac{1.5833}{2}(\frac{2}{7})}=[-1.2834,2.4262]$
+
+The Tukey 95% simultaneous confidence intervals for long-very short $\mu_3-\mu_1=(\bar{y_3}-\bar{y_1})\pm q_{\alpha}\sqrt{\frac{MSE}{2}(\frac{1}{n}+\frac{1}{n})}=1\pm 3.9\sqrt{\frac{1.5833}{2}(\frac{2}{7})}=[-0.8548,2.8548]$
+
+The Tukey 95% simultaneous confidence intervals for very long- very short $\mu_4-\mu_1=(\bar{y_4}-\bar{y_1})\pm q_{\alpha}\sqrt{\frac{MSE}{2}(\frac{1}{n}+\frac{1}{n})}=1.7143\pm 3.9\sqrt{\frac{1.5833}{2}(\frac{2}{7})}=[-0.1405,3.5691]$
+
+The Tukey 95% simultaneous confidence intervals for long-short $\mu_3-\mu_2=(\bar{y_3}-\bar{y_2})\pm q_{\alpha}\sqrt{\frac{MSE}{2}(\frac{1}{n}+\frac{1}{n})}=0.4286\pm 3.9\sqrt{\frac{1.5833}{2}(\frac{2}{7})}=[-1.4262,2.2834]$
+
+The Tukey 95% simultaneous confidence intervals for very long-short $\mu_4-\mu_2=(\bar{y_4}-\bar{y_2})\pm q_{\alpha}\sqrt{\frac{MSE}{2}(\frac{1}{n}+\frac{1}{n})}=1.1429\pm 3.9\sqrt{\frac{1.5833}{2}(\frac{2}{7})}=[-0.7119,2.9977]$
+
+The Tukey 95% simultaneous confidence intervals for very long-long $\mu_4-\mu_3=(\bar{y_4}-\bar{y_3})\pm q_{\alpha}\sqrt{\frac{MSE}{2}(\frac{1}{n}+\frac{1}{n})}=0.7143\pm 3.9\sqrt{\frac{1.5833}{2}(\frac{2}{7})}=[-1.1405,2.5691]$
+
+Redo the calculation with built-in R function
+```{r}
+TukeyHSD(anova1)
+```
+
+The R-built in function got the exact results as mine, but the comparison is in opposite directions and there is slight difference because of rounding. For instance, in Tukey's HSD I calculated, I use long-short (CI:[-1.4262,2.2834]), where in built-in R function it's short-long (CI:[-2.2840, 1.4269]).
+
+4. 
+
+```{r}
+library(car)
+leveneTest(y~factor(photoperiod))
+detach(mydata)
+```
+
+From Levene's Test, p-value is 0.4928, which is greater than significant level $\alpha=0.05$. Thus, we fail to reject the null hypothesis and state that the variance among all groups are equal. Variance of the growth variable is constant across the groups.

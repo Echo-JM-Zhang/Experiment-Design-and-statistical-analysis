@@ -1,0 +1,43 @@
+---
+title: "Assignment2_Q3"
+author: "Echo"
+date: "10/02/2023"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+1)
+
+```{r}
+ya <- c(67, 62, 57, 63)
+yb <- c(63, 59, 54, 59)
+yc <- c(77, 71, 67, 74)
+response <- c(ya, yb, yc)
+treatment1 <- c(rep("A", 4), rep("B", 4), rep("C", 4))
+treatment2 <- rep(c(1, 2, 3, 4), 3)
+treatment2 <- factor(treatment2)
+mydata <- data.frame(brand=treatment1, expertise=treatment2, y=response)
+attach(mydata)
+anova1 <- aov(y~brand+expertise)
+summary(anova1)
+```
+The ANOVA table is shown above.
+
+2)
+
+The test statistics (F statistics) to is 441.8, with degree of freedom (2, 6). P-value is $3.07\times10^{-7}$, which is smaller than significant level $\alpha=0.05$. Thus, we reject the null hypothesis and conclude that there is differences exist between the effects of the keyboard brands on the mean number of words entered per minute.
+
+3)
+
+The test statistics (F statistics) to is 107.7, with degree of freedom (3, 6). P-value is $1.32\times10^{-5}$, which is smaller than significant level $\alpha=0.05$. Thus, we reject the null hypothesis and conclude that there is differences exist between the effects of the data entry specialists on the mean number of words entered per minute.
+
+4)
+
+```{r}
+TukeyHSD(anova1, which = "brand")
+detach(mydata)
+```
+From Tukeys simultaneous confidence intervals, Brand C maximize the mean words entered per minute because it the confidence interval for C-A and C-B are both above 0. 

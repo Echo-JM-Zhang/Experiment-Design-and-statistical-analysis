@@ -1,0 +1,87 @@
+---
+title: "Assignment2_Q4"
+author: "Echo"
+date: "12/02/2023"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(ggplot2)
+library(ggpubr)
+
+primer_type <- c(rep(1,3), rep(2,3), rep(3,3))
+primer_type <- factor(rep(primer_type,2))
+y_dipping <- c(4.0, 4.5, 4.3, 5.6, 4.9, 5.4, 3.8, 3.7, 4.0)
+y_spraying <- c(5.4, 4.9, 5.6, 5.8, 6.1, 6.3, 5.5, 5.0, 5.0)
+mydata <- data.frame(primertype = primer_type, application_methods = c(rep("dipping", 9), rep("spraying", 9)), adhesion_force = c(y_dipping, y_spraying))
+```
+
+1)
+
+```{r}
+plot1 <- ggplot(mydata, aes(x = primertype, y = adhesion_force)) + geom_boxplot()
+plot2 <- ggplot(mydata, aes(x =application_methods, y = adhesion_force)) + geom_boxplot()
+
+ggarrange(plot1, plot2, labels = c("A", "B"), ncol = 2)
+```
+The box plots are shown above. From the two boxplots, there seem to be difference in mean adhesion force between primer type groups (mean adhesion force in primer type 2 seem to be larger than other primer types). Also, there is difference in mean adhesion force in difference application methods. It looks like there is a smaller mean adhesion force with dipping than spraying.
+
+2)
+
+|Primer Type|Dipping|Spraying|Average for Primer Type|
+|:---------:|:-----:|:------:|:---------------------:|
+|1|4.0, 4.5, 4.3, $\bar{y}_{11}.=4.27$|5.4, 4.9, 5.6, $\bar{y}_{12}.=5.3$|$\bar{y}_{1..}=4.78$|
+|2|5.6, 4.9, 5.4, $\bar{y}_{21}.=5.3$|5.8, 6.1, 6.3, $\bar{y}_{22}.=6.07$|$\bar{y}_{2..}=5.68$|
+|3|3.8, 3.7, 4.0, $\bar{y}_{31}.=3.83$|5.5, 5.0, 5.0, $\bar{y}_{32}.=5.17$|$\bar{y}_{3..}=4.5$|
+|Average for Application methods|$\bar{y}_{.1.}=4.47$|$\bar{y}_{.2.}=5.51$|$\bar{y}_{...}=4.99$|
+
+Sum of Square of Total:
+$$SST=\sum_{i=1}^{a}\sum_{j=1}^{b}\sum_{k=1}^{n}(\bar{y}_{ijk}-\bar{y}_{...})^2=\sum_{i=1}^{3}\sum_{j=1}^{2}\sum_{k=1}^{3}(\bar{y}_{ijk}-4.99)^2=10.7178$$
+
+Sum of Square of Primer Type (Factor A): $$SS_A=bn\sum_{i=1}^{a}(\bar{y}_{i..}-\bar{y}_{...})^2=2\times3\sum_{i=1}^{3}(\bar{y}_{i..}-4.99)^2=4.5618$$
+
+Sum of Square of Application Method (Factor B):
+$$SS_B=an\sum_{j=1}^{b}(\bar{y}_{.j.}-\bar{y}_{...})^2=3\times3\sum_{j=1}^{2}(\bar{y}_{.j.}-4.99)^2=4.8672$$
+
+Sum of Square of Interaction ($A\times B$):
+$$SS_{AB}=n\sum_{i=1}^{a}\sum_{j=1}^{b}(\bar{y}_{ij.}-\bar{y}_{i..}-\bar{y}_{.j.}+\bar{y}_{...})^2=3\sum_{i=1}^{3}\sum_{j=1}^{2}(\bar{y}_{ij.}-\bar{y}_{i..}-\bar{y}_{.j.}+4.99)^2=0.2448$$
+
+Sum of Square of Residual (RSS)
+$$RSS=\sum_{i=1}^{a}\sum_{j=1}^{b}\sum_{k=1}^{n}(\bar{y}_{ijk}-\bar{y}_{ij.})^2=\sum_{i=1}^{3}\sum_{j=1}^{2}\sum_{k=1}^{3}(\bar{y}_{ijk}-\bar{y}_{ij.})^2=0.9868$$
+The ANOVA table is shown below:
+
+|Source of variation|SS|df|MS|
+|:-----------------:|:--:|:--:|:--:|
+|Primer Type|4.5618|2|2.2809|
+|Application Method|4.8672|1|4.8671|
+|Primer Type*Application Method|0.2448|2|0.1224|
+|Residual|0.9868|12|0.0822|
+|Total|10.7178|17||
+
+3)
+
+```{r}
+interaction.plot(x.factor = mydata$primertype, trace.factor = mydata$application_methods, response = mydata$adhesion_force, fun = mean, col = c('blue', 'red'), lty = 1, lwd = 2, main = 'interaction plot', xlab = 'Primer Type', ylab = 'Adhesion Force', trace.label = 'Application method')
+```
+The interaction plot shows that lines for spraying and dipping seem to be parallel, and thus there is no interaction between Primer Type and Application Method.
+
+4)
+
+```{r}
+anova1 <- aov(mydata$adhesion_force~mydata$primertype*mydata$application_methods)
+summary(anova1)
+```
+
+The ANOVA table is shown above
+
+5)
+
+From ANOVA table, the test statistics for interaction term is F=1.466, with degree of freedom (2, 12). p-value is 0.269, which is greater than significant level $\alpha=0.05$. Thus, we fail to reject the null hypothesis and conclude that there is no significant interaction between Primer Type and Application Methods. 
+
+6)
+From ANOVA table, the test statistics for the effect of Application methods is F=59.703, with degree of freedom (1, 12). p-value is $5.36\times10^{-6}$, which is smaller than significant level $\alpha=0.05$. Thus, we reject the null hypothesis and conclude that application method affects the adhesion force. 

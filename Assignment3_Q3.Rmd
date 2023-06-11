@@ -1,0 +1,66 @@
+---
+title: "Assignment3_Q3"
+author: "Echo"
+date: "26/02/2023"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+First we prepare the data using the following code.
+
+```{r}
+x1 <- c(rep("White", 3), rep("Black", 3))
+x2 <- rep(c("Protestant", "Catholic", "Other"), 2)
+y1 <- c(817, 519, 48, 298, 39, 119)
+y2 <- c(250, 194, 9, 86, 13, 38)
+nn <- c(817+250, 519+194, 48+9, 298+86, 39+13, 119+38)
+y <- round(y1/nn, 4)
+mydata <- data.frame(race = x1, religion = x2, yes = y1, no = y2, n = nn, prop = y)
+```
+
+Then we fit the logistic regression model.
+
+```{r}
+attach(mydata)
+model <- glm(cbind(yes, no)~race+religion, family = binomial)
+# model2 <- glm(prop~race+religion, weights = n, family = binomial)
+summary(model)
+# summary(model2)
+```
+From the R output, R has set up indicator variables for $X_1=race$ (1 for White and 0 for Black) and for $X_2=religion$. Since Religion has 3 levels, 2 indicator variables (Other and Protestant) are used. (Other = 0, Protestant = 0) represents Catholic, (Other = 1, Protestant = 0) represents Other, and (Other = 0, Protestant = 1) represents Protestant. Thus, the estimated logit model can be written as follows:
+
+$$log(odds)=log(\frac{\hat{\pi}}{1-\hat\pi})=0.998-0.007White+0.272Other+0.206Protestant$$
+
+From the summary of the model, the p value for $X_1=race$ is greater than significant level $\alpha=0.05$. Thus, we fit a new model excluding $X_1=race$ (reduced model).
+
+```{r}
+model2 <- glm(cbind(yes, no)~religion, family = binomial)
+summary(model2)
+```
+
+Then we compare the full model and the reduced model
+
+```{r}
+anova(model2, model, test="LR")
+detach(mydata)
+```
+
+Comparing the reduced model (only religion as independent variable) and full model (race and religion as independent variable), the p-value = 0.9539 > 0.05. Thus, we fail to reject the null hypothesis that $\beta_1=0$, where $\beta_1$ is the coefficient of $X_1=race$ in the logistic regression model. We conclude that we have not achieved any significant reduction in residual deviance by adding the variable color to our model, so we may adopt the reduced model and not the full one.  The new estimated logit model is written as 
+
+$$log(odds)=log(\frac{\hat{\pi}}{1-\hat\pi})=0.992+0.276Other+0.208Protestant$$
+The estimated odds if belief in afterlife is $$odds=\frac{\hat\pi}{1-\hat\pi}=e^{0.992+0.276Other+0.208Protestant}$$
+
+The estimated probability of believe in afterlife is $$\hat P(Y=1)=\hat\pi=\frac{e^{0.992+0.276Other+0.208Protestant}}{1+e^{0.992+0.276Other+0.208Protestant}}$$
+
+According to the logistic model, the estimated odds that a person with Protestant religion believing in afterlife is $e^{0.208}=1.23$ times the estimated odds that a person with Catholic religion believing in afterlife. The estimated odds that a person with Other religion believing in afterlife is $e^{0.276}=1.32$ times the estimated odds that a person with Catholic religion believing in afterlife. The p-value for Others is 0.1335>0.05, so the difference between Others and Catholic's effect on belief in afterlife seems to be insignificant.
+
+When religion is Catholic, we have $log(odds)=log(\frac{\hat{\pi}}{1-\hat\pi})=0.992$. The probability of belief in afterlife is $\hat\pi=\frac{e^{0.992}}{1+e^{0.992}}=0.729$
+
+When religion is Protestant, we have $log(odds)=log(\frac{\hat{\pi}}{1-\hat\pi})=0.992+0.208=1.2$. The probability of belief in afterlife is $\hat\pi=\frac{e^{1.2}}{1+e^{1.2}}=0.769$
+
+When religion is Other, we have, we have $log(odds)=log(\frac{\hat{\pi}}{1-\hat\pi})=0.992+0.276=1.268$. The probability of belief in afterlife is $\hat\pi=\frac{e^{1.268}}{1+e^{1.268}}=0.780$
+
+Race does not have significant effect on the odds of belief in afterlife.

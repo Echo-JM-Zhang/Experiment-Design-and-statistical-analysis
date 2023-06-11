@@ -1,0 +1,98 @@
+---
+title: "Assignment1_Q3"
+author: "Echo"
+date: "25/01/2023"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ggplot2)
+library(ggpubr)
+library(car)
+set.seed(7)
+x <- rnorm(60)
+y <- 0.5*x + x^2 + rnorm(60)
+```
+1)
+
+```{r}
+data <- data.frame(x, y)
+p1 <- ggplot(data, aes(x, y))+geom_point()+theme_bw()+geom_smooth(method = "lm", se = FALSE, color = "red")
+p1
+```
+
+The scatter plot of y vs x is shown above. From the plot there seems to be a linear relationship between y and x, as the points distribute around the fitted line (red line). Thus, the simple linear model $y_i=\beta_0+\beta_1x_i+\epsilon_i$ might also be a candidate model.
+
+2)
+
+```{r}
+model.poly <- lm(y~x+I(x^2))
+model.poly$coefficients
+```
+The estimated coefficients of the full model is shown above. In other words, the full model is $y_i=\beta_0+\beta_1x_i+\beta_2x_i^2+\epsilon_i$, estimated coefficients are:
+
+$$\hat{\underset{\sim}\beta}=\begin{bmatrix}\
+\hat{\beta_0} \\
+\hat{\beta_1} \\
+\hat{\beta_2}
+\end{bmatrix}=\begin{bmatrix}\
+0.275 \\
+0.796 \\
+0.753
+\end{bmatrix}$$
+
+3)
+
+```{r}
+p2 <- ggplot(data, aes(x, y))+geom_point()+geom_smooth(method = "lm", formula = y~x+I(x^2), se = FALSE, color = "red")
+p2
+```
+
+4)
+
+```{r}
+model.simple <- lm(y~x)
+anova(model.simple, model.poly)
+```
+
+The reduced model is $y_i=\beta_0+\beta_1x_i+\epsilon_i$, and the full model is $y_i=\beta_o+\beta_1x_i+\beta_2x_i^2+\epsilon_i$.
+
+For the full-reduced model test,
+
+$H_0: \beta_2=0$
+
+$H_1: \beta_2 \not=0$
+
+The F test result is shown above. F statistics is 66.547, with the degree of freedom (1, 57). The p-value is $3.76\times10^{-11}$, which is smaller than significant level $\alpha=0.05$. Thus, we reject the null hypothesis and conclude that $\beta_2\not=0$. The full model fits the data better than the reduced model. 
+
+5)
+
+```{r}
+summary(model.poly)
+```
+In the summary of the full model, the multiple R-squared stands for coefficient of determination $R^2$, which is 0.8011. Thus, $R^2=0.8011$. From the coefficient, 0.8011 of the total variance can be explained by this model.
+
+6)
+For outliers:
+
+Use standardized residual to find all the potential outliers. If the standardized residual is greater than 2 or smaller than -2, then the corresponding y is the outlier.
+
+```{r}
+res.std <- rstandard(model.poly)
+index <- which(res.std > 2 | res.std < -2)
+plot(res.std, col=ifelse(abs(res.std)>2, "red", "black"), ylab = "stardardized residuals", pch=16)
+abline(h =c(-2,2), lty = 2,col = 2)
+text(index, res.std[index], labels=round(y[index],2))
+```
+From the plot, there are 3 outliers (y=3.89, y=1.96, and y=-1.64).
+
+For leverage:
+```{r}
+plot(model.poly, which=4, cook.levels = 1)
+```
+
+From the cook's distance (Cook's level = 1), observation 10, 15, and 20 are strongly influential and are leverage points.

@@ -1,0 +1,138 @@
+---
+title: "Assignmen 4 Q1"
+author: "Echo"
+date: "21/03/2023"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(pscl)
+library(ggplot2)
+library(dplyr)
+library(reshape)
+
+data("bioChemists")
+attach(bioChemists)
+```
+
+1. 
+```{r}
+model1 <- glm(art~fem+mar+kid5+phd+ment, family = poisson(link = "log"))
+summary(model1)
+```
+The Poisson regression model is
+
+$$log(\hat\mu_i)=0.3046-0.2246Women+0.1552Married-0.1849kids+0.0128phd+0.0255ment$$
+
+$$\hat\mu_i=e^{0.3046-0.2246Women+0.1552Married-0.1849kids+0.0128phd+0.0255ment}$$, where $\mu_i$ is the mean number of article for subject i.
+
+
+2. 
+
+```{r}
+# Deviance of model1
+dev <- model1$deviance
+dev
+# degree of freedom of residual
+df <- model1$df.residual
+df
+# goodness-of-fit test
+1-pchisq(dev, df)
+```
+The residual deviance for the Poisson regression model is 1634.371 with degree of freedom 909. The probability of observing a deviance this large if the model fits is 0, so we reject the null hypothesis and there is significant evidence that this Poisson model is lack-of-fit.
+
+3. 
+
+```{r}
+predp <- predprob(model1)
+data <- data.frame(predp[,1:8])
+n <- dim(data)[1]
+mydata <- cbind(as.vector(data[,1]), as.vector(rep(0,n)))
+for (i in c(1:7)){
+  mydata <- rbind(mydata,cbind(as.vector(data[,i+1]),as.vector((rep(i,n)))))
+}
+mydata <- data.frame(mydata)
+mydata$X2 <- as.factor(mydata$X2)
+ggplot(data=mydata, aes(x=X2 , y=X1))+geom_boxplot()+labs(x="observed numbers of articles", y="probability")
+ggplot(bioChemists, aes(x=art))+geom_histogram(binwidth = 1)+labs(x="observed numbers of articles",y="frequency")
+
+#predicted probability for the first subject
+predp[1,1:8]
+
+#predicted number of 0
+round(mean(predp[1])*n)
+#observed number of 0
+sum(bioChemists$art<1)
+```
+For first subject whose number of article is 0, there is a higher probability for publish 1 paper than 0. Also, from the boxplot of predicted probability, there is larger mean probability to publish 1 article than 0 article. But the histogram from the data shows that 0 article has the highest frequency. 
+
+Also, the predicted number of 0 is 129, which is smaller than observed number of 0 (275). Thus, the predicted probability contradict with the the observation.
+
+
+
+4. From part 3), there is a inconsistency between our Poisson regression model and the real data distribution. Also, from the histogram, there is excess 0 for y. Thus, zero-inflated Poisson model would be a good approach to address the zero inflation.
+
+
+
+5.
+```{r}
+fit1 <- zeroinfl(art~fem+mar+kid5+phd+ment)
+fit2 <- zeroinfl(art~fem+mar+kid5+phd+ment|ment)
+summary(fit1)
+summary(fit2)
+1-pchisq(2,df=4)
+```
+From summary of 2 model, Log-likelihood of model 1 is -1605, with degree of freedom 12. Log-likelihood of model 2 is -1606, with degree of freedom 8. Test statistic is $-2\times(-1606-(-1605))=2$~$\chi^2_4$. The p value is 0.736, which is greater than $\alpha=0.05$. Thus, we fail to reject null hypothesis, and conclude that the nested model 2 (with less parameter) is appropriate.
+
+
+
+6.
+
+```{r}
+exp(coef(fit2))
+```
+
+For the count model coefficients, the average number of articles for women is 0.8037 times the average number for men, holding other variable constant. The average number of articles for married people is 1.1427 times the average number for non-married, holding other variable constant. One kid increase will multiply the average number of articles by 0.8496, holding other variables constant. One unit increase in prestige of PhD school will multiply the average number of articles by 0.9935. One unit increase in the productivity of mentor will multiply the average number of articles by 1.0185.
+
+The “Zero-inflation model coefficients” refer to separating subjects with no-articles from articles. The productivity of the mentor is an important consideration for this. We have
+
+$$logit(\hat\pi_i)=-0.6837-0.1303ment$$
+
+$$\frac{\hat\pi_i}{1-\hat\pi_i}=e^{-0.6837-0.1303ment}$$
+One unit increase in the productivity of mentor will multiply $\frac{\pi_i}{1-\pi_i}$ by $e^{-0.1303}=0.8778$, where $\pi_i$ is the probability that the ith subject has no article.
+
+7.
+
+```{r}
+mean(phd)
+```
+
+
+The count model is
+
+$$log(\hat\mu_i)=0.6302-0.2185Women+0.1334Married-0.1630kid-0.0065phd+0.0183ment$$
+The zero model is 
+
+$$logit(\hat\pi_i)=-0.6837-0.1303ment$$
+The can be written as
+
+Count model:
+$$\hat\mu_i=e^{0.6302-0.2185Women+0.1334Married-0.1630kid-0.0065phd+0.0183ment}$$
+
+Zero model:
+$$\hat\pi_i=\frac{e^{-0.6837-0.1303ment}}{1+e^{-0.6837-0.1303ment}}$$
+The overall fitted model is
+
+$$\hat E(y_i)=(1-\hat\pi_i)\mu_i=\frac{1}{1+e^{-0.6837-0.1303ment}}(e^{0.6302-0.2185Women+0.1334Married-0.1630kid-0.0065phd+0.0183ment})$$
+ Plug in the variants.
+ 
+ $$\hat E(y_i)=\frac{1}{1+e^{-0.6837-0.1303\times7}}(e^{0.6302-0.0065\times3.1031+0.0183\times7})=10.32$$
+
+```{r}
+detach(bioChemists)
+```
+
