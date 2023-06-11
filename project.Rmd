@@ -1,0 +1,154 @@
+---
+title: |
+  STA305 H1S Sec L0101 / L0201 or STA1004 H1S L0201, W2022
+  Factors Affect Students' Exam Performance
+author: |
+  Zhang Jingmin(Echo),
+  student ID: 1007902165
+date: "April 6, 2022"
+output: pdf_document
+bibliography: reference.bib
+csl: apa-6th-edition.csl
+nocite: '@*'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+# Introduction
+
+How to enhance exam performance and get good scores in exams is a question that is concerned by most students. Traditionally, educators have assumed that students' exam performance is causally related the amount of time spent on study. The more time students study for, the better grades they will get in the exam. Practice exam is another factor that is associated with exam performance, and past research has shown that students who did practice exams scored higher in the exam than those who reviewed key words only (Balch, 1998). Moreover, in recent years there exist novel ways of study, such as e-Learning and recorded lectures. Studies done by Larkin (2010) give rise to concern different ways of lecture delivery are getting related to students' academic performance and school experience.
+
+I am interested in the effect of some factors, which are widely known to influence students' exam performance. Correctly identifying factors that affect the exam performance will help students study more efficiently and prepare better for the exam. Also understanding the effect and interaction of these factors will help educators make proper suggestions on how students should study for the exam, thus improving their exam scores and academic performance.    
+
+# Materials and Methods
+
+## Experimental Design and Data Collection
+
+A $2^4$ factorial experiment with 2 blocks (block size = 8) and 2 replications is conducted. Factor A is study time, which is the time that participants are asked to study for the exam. It has two levels--1 hour and 3 hours. Factor B is practice exam. Level 'view' means participants only view key points and practice exam without actually doing it, and level 'write' means participants are asked to write the practice exam. Factor C is lecture delivery. It has two levels--recording (participants are assigned to watch recorded lectures), and synchronous (participants will take synchronous lectures via Zoom). The last factor D is cellphones. Its level yes indicates participants will have their cellphones during the experiments, and no means participants are not allowed to keep or use their cellphones. The summary of factors and their levels are shown in the table below:
+
+|Factor (factor name)|level|
+|:------------------:|:---:|
+|A (study time)|1hr (-), 3hr (+)|
+|B (practice exam)|view (-), write (+)|
+|C (lecture delivery)|recording (-), synchronous (+)|
+|D (cellphone)|no (-), yes (+)|
+
+There are 2 replications. In each replicate, participants are blocked by their gender (female/male). Females are assigned to the first block and males are assigned to the second block. The block size is 8, which is smaller than the total number of treatment combinations ($2^4=16$). Thus, confounding is used in this design. In the first replicate, I confound the highest order of interaction (ABCD) with blocks. In the second replicate, I confound the 3 factor interaction ABC with blocks. Within each blocks, participants are randomly assigned to the treatment combination. The summary of this blocking and treatment assignment is shown in the table below:
+
+|     |replicate 1 (ABCD confounded)|replicate 2 (ABC confounded)|
+|:---:|:---------:|:---------:|
+|Block 1 (Female)|(1),ab,ac,bc,ad,bd,cd,abcd|(1),d,ab,ac,bc,abd,acd,bcd|
+|Block 2 (Male)|a,b,c,d,abc,abd,acd,bcd|a,b,c,ad,bd,cd,abc,abcd|
+
+To collect data, 32 Grade 11 students from Chunhui Senior High School, Zhejiang, China, are recruited. 16 of them are males and 16 are females, and none of them has previous exposure to Calculus. They are randomly separated into 2 groups (2 replications), with 8 males and 8 females in each group. In each replication, students are separate into 2 blocks based on their gender, and within each block each student is randomly assigned one treatment combination, as shown in the table above. They study the same material from Calculus, differing in treatments. For instance, a female student assigned treatment combination (1) studies with recorded lectures. Then she is given practice exams and key words, but only allow to view then instead of actually doing practice exams. Before the exam, she is assigned 1 hour to review the material she studied. Throughout the experiment, she is not allowed to use her cellphone. After students finish all their treatment combination, they will have an online exam testing the materials. Their scores of the exam are collected as the response variable of the experiment.
+
+```{r}
+#experimental design and blocking
+n <- 32
+nn <- 16
+dataset <- data.frame('num'=seq(1,n), 'rep'=c(rep(1,16), rep(2,16)),
+                      'A'=rep(c(0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1),2),
+                      'B'=rep(c(0,0,1,1,0,0,1,1,0,0,1,1,0,0,1,1),2),
+                      'C'=rep(c(0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1),2),
+                      'D'=rep(c(0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1),2),
+                      'blk'=numeric(n),
+                      'y'=numeric(n))
+
+#confounding with ABCD in rep 1
+for (i in 1:nn){
+  if ((dataset$A[i]+dataset$B[i]+dataset$C[i]+dataset$D[i]) %% 2 == 0){
+    dataset$blk[i] <- 1
+  }else{
+    dataset$blk[i] <- 2
+  }
+}
+#confounding with ABC in rep 2
+for (i in (nn+1):(2*nn)){
+  if ((dataset$A[i]+dataset$B[i]+dataset$C[i]) %% 2 == 0){
+    dataset$blk[i] <- 1
+  }else{
+    dataset$blk[i] <- 2
+  }
+}
+dataset$rep <- as.factor(dataset$rep)
+dataset$blk <- as.factor(dataset$blk)
+for (i in 1:n){
+  if (dataset$A[i] == 0){
+    dataset$A[i] <- -1
+  }
+  if (dataset$B[i] == 0){
+    dataset$B[i] <- -1
+  }
+  if (dataset$C[i] == 0){
+    dataset$C[i] <- -1
+  }
+  if (dataset$D[i] == 0){
+    dataset$D[i] <- -1
+  }
+}
+
+# data collected from the experiment
+mydata <- read.csv('experiment_info.csv')
+mydata$rep <- as.factor(mydata$rep)
+dataset$y <- mydata$exam_score
+
+```
+
+## Statistical Analysis
+
+Before data analysis, I make adjustment to factor levels so that it is easier so calculate the main effect and interactions. The adjustment is shown below, where for quantitative factors their levels are adjusted based on equation $x' = \frac{x-(x_{high}+x_{low})/2}{(x_{high-x_{low}})/2}$, where $x'$ is the level after adjustment, $x_{high}$ is the original level that has a larger value, and $x_{low}$ is the original level that has a smaller value.
+
+|factor|before adjustment|after adjustment|
+|:----:|:---------------:|:--------------:|
+|A (study time (hrs))|(1, 3)|(-1, 1)|
+|B (practice exam)|(view, write)|(-1, 1)|
+|C (lecture delivery)|(recording, synchronous)|(-1, 1)|
+|D (cellphone)|(no, yes)|(-1, 1)|
+
+To perform statistical analysis, first, I use Analysis of Variance (ANOVA) test to calculate F statistics. Based on F test, I can eliminate insignificant factors and interactions, and identify main effects and interactions that significantly influence the response variable (exam score). There are three assumptions of ANOVA test: 1) normality assumption; 2) independently random sample assumption; and 3) equal variance assumption. These assumptions will be checked using residual plot and Q-Q plot. If there are violations of ANOVA assumptions, the results of significant test might not be reliable.
+
+Then I will calculate main effects of significant factors and factor interactions. This can be done by using the following equation:
+
+$effect/interaction=\frac{[contrast]}{2^{k-1}n}$, where $k=4, n=2$ in my experiment.
+
+Another way is to build the regression model with significant factors and interactions. Since I have used deviation coding for factors, which is shown in the adjustment above, the main effect and interaction can be calculated by $\hat{\beta}*2$, where $\hat{\beta}$ is the regression coefficient. Both of the method will give the same main effect and interactions. If there is significant factor interactions, the interactions plot can be used to see how these factors interact and work together to influence the response variable, which is the exam score.
+
+# Results and Discussion
+
+```{r}
+fit1 <- lm(y~rep+blk%in%rep+A*B*C*D, data = dataset)
+anova(fit1)
+```
+
+From the ANOVA table above, factor A, B, C, and 2 factor interaction between A and C are significant, given the significant level $\alpha = 0.05$.
+
+```{r, fig.height=3,fig.width=12}
+par(mfrow = c(1,3))
+plot(fit1$fitted.values, fit1$residuals, main="Residuals vs. Fitted", pch=20)
+abline(h=0, lty=2)
+
+qqnorm(fit1$residuals, pch=20)
+qqline(fit1$residuals)
+
+interaction.plot(x.factor = mydata$study_time.hrs., trace.factor = mydata$lecture_delivery, response = mydata$exam_score, fun = mean, col = c('blue', 'red'), lty = 1, lwd = 2, main = 'interaction plot', xlab = 'study hours', ylab = 'exam score', trace.label = 'lecture delivery')
+
+```
+
+From the residual plot, residuals are randomly distributed around x-axis. Thus, the equal variance assumption is satisfied. From the Q-Q plot, residuals roughly fit the line, so the normality assumption is also satisfied. The design of experiment and the residual plot also support the independent random sample assumption. Thus, all of the ANOVA assumptions are satisfied. The ANOVA test is reliable. 
+
+Below is the main effect of factor A, B, and C. The main effect of A is 7.44, so increasing study time from 1 hour to 3 hours will improve the exam score. Similarly, since the main effects of B and C are also positive, doing practice exam and taking synchronous lectures will increase exam score, compared to viewing key words and practice exam, and watching lecture recordings, respectively. Also, ANOVA test shows that there is a significant interaction between factor A and C. The interaction plot shows that the main effect of study time is larger for students watching lecture recording than students taking synchronous lectures.
+
+```{r}
+fit1.ef <- round(fit1$coefficients*2, 2) #coefficient*2
+effect <- c(fit1.ef[3:5], fit1.ef[10])
+effect
+```
+# Conclusion
+
+To sum up, practice exam, study time, and lecture delivery show significant effect on students' exam performance. Doing practice exam, increasing study time, and taking synchronous lectures will improve students' exam performance. It is surprising that cellphones, originally thought to be distractions and lower students' exam performance, do not significantly affect students' exam scores. Also, there are interactions between study time and lecture delivery. The main effect of study time is larger for students who take synchronous lectures, compared with students who only watch lecture recordings.
+
+Students are encouraged to engage in synchronous lectures, study longer for the exam, and do practice exams if they want to score higher in the exam. If students have to watch lecture recordings rather than taking synchronous lectures, they are suggested to spend more time studying and preparing for the exam.
+
+# Reference
